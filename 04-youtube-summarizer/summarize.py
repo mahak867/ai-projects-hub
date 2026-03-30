@@ -1,0 +1,127 @@
+import anthropic
+import subprocess
+import sys
+import re
+import argparse
+import json
+
+client = anthropic.Anthropic()
+
+def get_transcript(url: str) -> tuple[str, str]:
+    """Download transcript using yt-dlp"""
+    print(f"Fetching transcript for: {url}")
+    
+    # Try to get auto-generated subtitles
+    result = subprocess.run([
+        "yt-dlp", "--skip-download",
+        "--write-auto-subs", "--sub-lang", "en",
+        "--sub-format", "vtt",
+        "--output", "/tmp/yt_%(id)s",
+        "--print", "title",
+        url
+    ], capture_output=True, text=True)
+    
+    title = result.stdout.strip()
+    
+    # Read the VTT file
+    import glob
+    vtt_files = glob.glob("/tmp/yt_*.vtt")
+    if not vtt_files:
+        raise FileNotFoundError("No transcript found. Video may not have subtitles.")
+    
+    with open(vtt_files[0], 'r') as f:
+        vtt_content = f.read()
+    
+    # Clean VTT format to plain text
+    lines = vtt_content.split('\n')
+    text_lines = []
+    for line in lines:
+        line = line.strip()
+        if (line and 
+            not line.startswith('WEBVTT') and
+            not re.match(r'^\d+:\d+', line) and
+            not re.match(r'^\d+$', line) and
+            not line.startswith('NOTE') and
+            line not in text_lines[-3:] if text_lines else True):
+            # Remove HTML tags
+            clean = re.sub(r'<[^>]+>', '', line)
+            if clean:
+                text_lines.append(clean)
+    
+    # Cleanup temp files
+    import os
+    for f in vtt_files:
+        os.remove(f)
+    
+    return title, ' '.join(text_lines)
+
+def summarize(url: str, style: str = "comprehensive") -> dict:
+    title, transcript = get_transcript(url)
+    print(f"Video: {title}")
+    print(f"Transcript length: {len(transcript)} chars")
+    
+    prompts = {
+        "comprehensive": f"""Summarize this YouTube video transcript.
+
+Title: {title}
+
+Transcript:
+{transcript[:60000]}
+
+Provide:
+1. **TL;DR** (2-3 sentences max)
+2. **Key Points** (bullet list of 5-8 main takeaways)
+3. **Detailed Summary** (3-5 paragraphs covering the full content)
+4. **Memorable Quotes** (2-3 best quotes with approximate timestamps if inferable)
+5. **Action Items** (what the viewer should do based on this video)
+6. **Who should watch this** (target audience)""",
+
+        "brief": f"""Give me a very brief summary of this YouTube video.
+Title: {title}
+Transcript: {transcript[:40000]}
+
+Format: TL;DR (2 sentences) + 5 bullet point takeaways""",
+
+        "notes": f"""Convert this YouTube video into structured study notes.
+Title: {title}
+Transcript: {transcript[:60000]}
+
+Create organized notes with headers, subheadings, and key concepts."""
+    }
+    
+    response = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=2048,
+        messages=[{"role": "user", "content": prompts[style]}]
+    )
+    
+    return {
+        "title": title,
+        "url": url,
+        "style": style,
+        "summary": response.content[0].text,
+        "transcript_length": len(transcript)
+    }
+
+def main():
+    parser = argparse.ArgumentParser(description="Summarize any YouTube video with Claude")
+    parser.add_argument("url", help="YouTube URL")
+    parser.add_argument("--style", choices=["comprehensive", "brief", "notes"], 
+                       default="comprehensive", help="Summary style")
+    parser.add_argument("--output", help="Save to JSON file")
+    args = parser.parse_args()
+    
+    result = summarize(args.url, args.style)
+    
+    print("\n" + "="*60)
+    print(f"📺 {result['title']}")
+    print("="*60)
+    print(result['summary'])
+    
+    if args.output:
+        with open(args.output, 'w') as f:
+            json.dump(result, f, indent=2)
+        print(f"\n💾 Saved to {args.output}")
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "financial-analyst": {
+      "command": "python",
+      "args": ["/FULL/PATH/TO/server.py"],
+      "env": {
+        "PYTHONPATH": "/FULL/PATH/TO/project"
+      }
+    }
+  }
+}

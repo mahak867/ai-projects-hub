@@ -1,0 +1,4 @@
+mcp>=1.0.0
+yfinance>=0.2.38
+pandas>=2.0.0
+anthropic>=0.40.0
