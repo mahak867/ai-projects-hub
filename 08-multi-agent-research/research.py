@@ -10,7 +10,13 @@ import argparse
 import time
 from datetime import datetime
 
-client = anthropic.Anthropic()
+import os as _os, sys as _sys
+_api_key = _os.getenv('ANTHROPIC_API_KEY')
+if not _api_key:
+    print('\u274c Error: ANTHROPIC_API_KEY environment variable not set')
+    print('Get your key at: https://console.anthropic.com')
+    _sys.exit(1)
+client = anthropic.Anthropic(api_key=_api_key)
 
 def call_agent(role: str, system: str, prompt: str, context: str = "") -> str:
     print(f"\n🤖 {role} working...")

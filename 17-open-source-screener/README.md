@@ -1,29 +1,123 @@
 # 📈 Open Source Screener
 
-Self-hosted Indian stock screener with Claude AI analysis. Deploy with your own API keys.
+> **Difficulty:** Advanced  
+> **Time to Complete:** ~30 minutes
 
-![Demo](https://img.shields.io/badge/difficulty-advanced-red?style=flat-square)
+Self-hosted Indian stock screener with Claude AI analysis. Screen NSE/BSE stocks by fundamentals and get AI-powered investment insights.
 
-This project contains the full Screener.in replica built in this repo.
-See the main screener-replica project for the complete Next.js application.
+## What This Does
 
-## Quick deploy to Vercel
-```bash
-git clone https://github.com/mahak867/ai-projects-hub
-cd ai-projects-hub/17-open-source-screener
-npm install
-vercel deploy
+Screens any list of NSE/BSE stocks against your chosen fundamental criteria (ROE, P/E, market cap, debt) and then runs Claude AI analysis on the results — giving you top picks, sector trends, valuation summaries, and red flags.
+
+## Demo
+
+```
+$ python screener.py --min-roe 15 --max-pe 30
+
+📈 Open Source NSE Screener
+Screening 20 stocks with filters:
+  Min ROE: 15% | Max P/E: 30 | Min Cap: ₹5,000 Cr
+
+✓ 8 stocks passed filters
+
+Symbol           Name                           Price     ROE%     P/E    MarCap Cr   1Y Ret%
+-----------------------------------------------------------------------------------------------
+TCS.NS           Tata Consultancy Services    4150.00    45.2    28.3      1512000    12.3
+...
+
+🤖 Claude AI Analysis:
+**Top 3 Picks**
+1. TCS.NS — Strong ROE of 45%, reasonable P/E at 28x for a market leader...
 ```
 
-Add env vars in Vercel:
-- `NEXT_PUBLIC_FINNHUB_API_KEY` — from finnhub.io
-- `ANTHROPIC_API_KEY` — Claude API key
+## Prerequisites
 
-## Features
-- Screener.in-style layout (P&L, Balance Sheet, Cash Flow, Ratios)
-- Shareholding pattern with donut chart
-- Analyst consensus ratings
-- Claude AI analysis for Pro users
-- Export to CSV
+- Python 3.10 or higher
+- Anthropic API key ([get one free](https://console.anthropic.com))
 
-See [screener-replica](/screener-replica) for full source code.
+## Installation
+
+```bash
+git clone https://github.com/mahak867/ai-projects-hub.git
+cd ai-projects-hub/17-open-source-screener
+
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+pip install -r requirements.txt
+```
+
+## Setup
+
+```bash
+export ANTHROPIC_API_KEY='sk-ant-...'
+```
+
+## Usage
+
+```bash
+# Screen Nifty 50 with default filters
+python screener.py
+
+# Custom filters
+python screener.py --min-roe 15 --max-pe 25
+
+# Screen specific stocks
+python screener.py --symbols TCS.NS INFY.NS WIPRO.NS HDFCBANK.NS
+
+# Screen without AI analysis (faster)
+python screener.py --min-roe 20 --no-ai
+
+# Save results to JSON
+python screener.py --output results.json
+```
+
+### All Options
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--symbols` | Nifty 50 | Space-separated list of Yahoo Finance symbols |
+| `--min-roe` | 10 | Minimum return on equity (%) |
+| `--max-pe` | 50 | Maximum trailing P/E ratio |
+| `--min-cap` | 5000 | Minimum market cap in Crores |
+| `--max-de` | 3 | Maximum debt-to-equity ratio |
+| `--no-ai` | — | Skip Claude AI analysis |
+| `--output` | — | Save JSON results to file |
+
+## Project Structure
+
+```
+17-open-source-screener/
+├── screener.py          # Main screener with CLI and AI analysis
+├── requirements.txt     # Python dependencies
+└── README.md           # This file
+```
+
+## How It Works
+
+1. Fetches stock data from Yahoo Finance using `yfinance`
+2. Applies your chosen fundamental filters (ROE, P/E, market cap, debt)
+3. Displays a formatted table of stocks that pass
+4. Sends the screened results to Claude for AI-powered analysis
+5. Claude returns top picks, sector insights, valuation commentary, and red flags
+
+## Troubleshooting
+
+**"No data available" for some symbols**
+→ Some stocks may have incomplete data on Yahoo Finance. Try again or check the symbol format (must end in `.NS` for NSE or `.BO` for BSE).
+
+**"ANTHROPIC_API_KEY not set"**
+→ Run `export ANTHROPIC_API_KEY='sk-ant-...'` before running the script.
+
+**"ImportError: No module named yfinance"**
+→ Run `pip install -r requirements.txt`
+
+## Learn More
+
+- [Anthropic Claude API Docs](https://docs.anthropic.com/)
+- [yfinance Documentation](https://python-yfinance.readthedocs.io/)
+- [NSE Official Site](https://www.nseindia.com/)
+
+---
+
+**Built with Claude by Anthropic** | [More AI Projects](https://github.com/mahak867/ai-projects-hub)

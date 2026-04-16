@@ -4,7 +4,13 @@ from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-client = anthropic.Anthropic()
+import os as _os, sys as _sys
+_api_key = _os.getenv('ANTHROPIC_API_KEY')
+if not _api_key:
+    print('\u274c Error: ANTHROPIC_API_KEY environment variable not set')
+    print('Get your key at: https://console.anthropic.com')
+    _sys.exit(1)
+client = anthropic.Anthropic(api_key=_api_key)
 
 FEEDS = {
     "Economic Times Markets": "https://economictimes.indiatimes.com/markets/rss.cms",

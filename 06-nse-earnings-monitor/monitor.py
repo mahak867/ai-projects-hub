@@ -12,7 +12,14 @@ import schedule
 from datetime import datetime
 from dataclasses import dataclass
 
-client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+# Validate required environment variables at startup
+_api_key = os.environ.get("ANTHROPIC_API_KEY")
+if not _api_key:
+    import sys
+    print("\u274c Error: ANTHROPIC_API_KEY environment variable not set")
+    print("Get your key at: https://console.anthropic.com")
+    sys.exit(1)
+client = anthropic.Anthropic(api_key=_api_key)
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
 

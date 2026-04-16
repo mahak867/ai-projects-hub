@@ -1,49 +1,100 @@
 """
 Build Your Own Perplexity
-Web search + Claude = streaming AI answers with citations
+Web search + Claude = streaming AI answers with citations.
 """
-import anthropic
-import streamlit as st
-import requests
+from typing import Dict, List
 import json
+import os
 from datetime import datetime
+
+import anthropic
+import requests
+import streamlit as st
 
 st.set_page_config(page_title="AI Search", page_icon="🔍", layout="wide")
 
-client = anthropic.Anthropic(api_key=st.sidebar.text_input("Anthropic API Key", type="password"))
-brave_key = st.sidebar.text_input("Brave Search API Key (free at brave.com/search/api)", type="password")
-
-st.sidebar.markdown("""
+with st.sidebar:
+    api_key = st.text_input(
+        "Anthropic API Key",
+        type="password",
+        value=os.getenv("ANTHROPIC_API_KEY", ""),
+    )
+    brave_key = st.text_input(
+        "Brave Search API Key (free at brave.com/search/api)",
+        type="password",
+        value=os.getenv("BRAVE_API_KEY", ""),
+    )
+    st.markdown("""
 **Free API keys needed:**
 - [Anthropic](https://console.anthropic.com) — Claude
 - [Brave Search](https://brave.com/search/api/) — Web results (2000 free/month)
 """)
 
-def brave_search(query: str, count: int = 5) -> list[dict]:
-    if not brave_key:
-        return [{"title": "Demo result", "url": "https://example.com", "snippet": f"Demo snippet for: {query}. Add a Brave API key for real results."}]
+
+def brave_search(query: str, brave_api_key: str, count: int = 5) -> List[Dict[str, str]]:
+    """Search the web using the Brave Search API.
+
+    Args:
+        query: Search query string
+        brave_api_key: Brave Search API key
+        count: Number of results to return
+
+    Returns:
+        List of result dicts with 'title', 'url', and 'snippet' keys
+    """
+    if not brave_api_key:
+        return [
+            {
+                "title": "Demo result",
+                "url": "https://example.com",
+                "snippet": f"Demo snippet for: {query}. Add a Brave API key for real web results.",
+            }
+        ]
     try:
         r = requests.get(
             "https://api.search.brave.com/res/v1/web/search",
-            headers={"Accept": "application/json", "Accept-Encoding": "gzip", "X-Subscription-Token": brave_key},
-            params={"q": query, "count": count, "search_lang": "en"}
+            headers={
+                "Accept": "application/json",
+                "Accept-Encoding": "gzip",
+                "X-Subscription-Token": brave_api_key,
+            },
+            params={"q": query, "count": count, "search_lang": "en"},
+            timeout=10,
         )
+        r.raise_for_status()
         results = r.json().get("web", {}).get("results", [])
-        return [{"title": r.get("title", ""), "url": r.get("url", ""), "snippet": r.get("description", "")} for r in results]
-    except Exception as e:
+        return [
+            {
+                "title": item.get("title", ""),
+                "url": item.get("url", ""),
+                "snippet": item.get("description", ""),
+            }
+            for item in results
+        ]
+    except requests.RequestException as e:
         return [{"title": "Search error", "url": "", "snippet": str(e)}]
 
-def format_sources(results: list[dict]) -> str:
+
+def format_sources(results: List[Dict[str, str]]) -> str:
+    """Format search results as a numbered source list for the prompt.
+
+    Args:
+        results: List of search result dicts
+
+    Returns:
+        Formatted string with numbered sources
+    """
     lines = []
     for i, r in enumerate(results, 1):
         lines.append(f"[{i}] {r['title']}\nURL: {r['url']}\n{r['snippet']}\n")
     return "\n".join(lines)
 
+
 st.title("🔍 AI Search")
 st.caption("Ask anything → get AI answers with web citations")
 
 if "history" not in st.session_state:
-    st.session_state.history = []
+    st.session_state.history: List[Dict[str, str]] = []
 
 query = st.chat_input("Ask anything...")
 
@@ -52,13 +103,17 @@ for msg in st.session_state.history:
         st.markdown(msg["content"])
 
 if query:
+    if not api_key:
+        st.error("Please enter your Anthropic API key in the sidebar")
+        st.stop()
+
     st.session_state.history.append({"role": "user", "content": query})
     with st.chat_message("user"):
         st.markdown(query)
 
     with st.chat_message("assistant"):
         with st.status(f"Searching the web for: {query}", expanded=True) as status:
-            results = brave_search(query)
+            results = brave_search(query, brave_key)
             st.write(f"Found {len(results)} sources")
             status.update(label="Generating answer...", state="running")
 
@@ -72,18 +127,19 @@ Web search results:
 Instructions:
 - Answer the question thoroughly using the search results
 - Cite sources using [1], [2], etc. inline
-- If search results don't fully answer the question, say so
+- If search results do not fully answer the question, say so
 - Be accurate and helpful
 - Format with markdown for readability"""
 
         placeholder = st.empty()
         full_response = ""
 
-        with client.messages.stream(
+        claude_client = anthropic.Anthropic(api_key=api_key)
+        with claude_client.messages.stream(
             model="claude-sonnet-4-20250514",
             max_tokens=1500,
             system=system,
-            messages=[{"role": "user", "content": query}]
+            messages=[{"role": "user", "content": query}],
         ) as stream:
             for text in stream.text_stream:
                 full_response += text

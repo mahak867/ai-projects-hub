@@ -12,7 +12,13 @@ import os
 import argparse
 from pathlib import Path
 
-client = anthropic.Anthropic()
+import os as _os, sys as _sys
+_api_key = _os.getenv('ANTHROPIC_API_KEY')
+if not _api_key:
+    print('\u274c Error: ANTHROPIC_API_KEY environment variable not set')
+    print('Get your key at: https://console.anthropic.com')
+    _sys.exit(1)
+client = anthropic.Anthropic(api_key=_api_key)
 chroma = chromadb.PersistentClient(path="./chroma_db")
 
 def chunk_text(text: str, chunk_size: int = 800, overlap: int = 100) -> list[str]:

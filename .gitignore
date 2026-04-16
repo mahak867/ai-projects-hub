@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+ENV/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.key
+secrets/
+
+# Data files generated at runtime
+journal.json
+paper_trades.db
+chroma_db/
+
+# Media files (upload your own)
+*.mp3
+*.mp4
+*.wav
+*.m4a
+*.pdf
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
