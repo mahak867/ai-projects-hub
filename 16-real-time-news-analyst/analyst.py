@@ -4,13 +4,15 @@ from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-import os as _os, sys as _sys
-_api_key = _os.getenv('ANTHROPIC_API_KEY')
-if not _api_key:
-    print('\u274c Error: ANTHROPIC_API_KEY environment variable not set')
-    print('Get your key at: https://console.anthropic.com')
-    _sys.exit(1)
-client = anthropic.Anthropic(api_key=_api_key)
+import sys
+
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+if not ANTHROPIC_API_KEY:
+    print("❌ Error: ANTHROPIC_API_KEY environment variable not set")
+    print("   Fix: export ANTHROPIC_API_KEY='sk-ant-...'")
+    print("   Get a key: https://console.anthropic.com")
+    sys.exit(1)
+client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 FEEDS = {
     "Economic Times Markets": "https://economictimes.indiatimes.com/markets/rss.cms",
@@ -76,7 +78,10 @@ Return ONLY valid JSON."""
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"): raw = raw[4:]
-    return json.loads(raw.strip())
+    try:
+        return json.loads(raw.strip())
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Claude returned invalid JSON: {e}\nResponse: {raw}") from e
 
 def format_email(analysis: dict, articles: list[dict]) -> tuple[str, str]:
     date = datetime.now().strftime("%B %d, %Y")

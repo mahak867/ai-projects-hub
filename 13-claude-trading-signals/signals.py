@@ -10,13 +10,15 @@ import os
 import sqlite3
 from datetime import datetime
 
-import os as _os, sys as _sys
-_api_key = _os.getenv('ANTHROPIC_API_KEY')
-if not _api_key:
-    print('\u274c Error: ANTHROPIC_API_KEY environment variable not set')
-    print('Get your key at: https://console.anthropic.com')
-    _sys.exit(1)
-client = anthropic.Anthropic(api_key=_api_key)
+import sys
+
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+if not ANTHROPIC_API_KEY:
+    print("❌ Error: ANTHROPIC_API_KEY environment variable not set")
+    print("   Fix: export ANTHROPIC_API_KEY='sk-ant-...'")
+    print("   Get a key: https://console.anthropic.com")
+    sys.exit(1)
+client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 DB_PATH = "paper_trades.db"
 
 def init_db():
@@ -132,7 +134,10 @@ Return ONLY valid JSON."""
         raw = raw.split("```")[1]
         if raw.startswith("json"):
             raw = raw[4:]
-    return json.loads(raw.strip())
+    try:
+        return json.loads(raw.strip())
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Claude returned invalid JSON for signal: {e}\nResponse: {raw}") from e
 
 def analyze(symbols: list[str], save: bool = True) -> list[dict]:
     conn = init_db() if save else None
