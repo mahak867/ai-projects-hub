@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  syntax-check:
+    name: Python Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check all Python files compile
+        run: |
+          echo "Checking syntax for all .py files..."
+          find . -name "*.py" -not -path "./.git/*" | while read f; do
+            python3 -m py_compile "$f" && echo "✓ $f" || { echo "✗ FAIL: $f"; exit 1; }
+          done
+          echo "All files pass syntax check ✓"
+
+  structure-check:
+    name: Project Structure Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify every project has required files
+        run: |
+          FAILED=0
+          for dir in [0-9][0-9]-*/; do
+            [ -f "$dir/README.md" ]       || { echo "Missing README.md in $dir"; FAILED=1; }
+            [ -f "$dir/requirements.txt" ] || { echo "Missing requirements.txt in $dir"; FAILED=1; }
+            [ -f "$dir/.env.example" ]     || { echo "Missing .env.example in $dir"; FAILED=1; }
+          done
+          [ $FAILED -eq 0 ] && echo "All projects have required files ✓" || exit 1
