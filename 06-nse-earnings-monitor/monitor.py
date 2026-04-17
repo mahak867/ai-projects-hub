@@ -52,6 +52,7 @@ class EarningsAlert:
     analysis: str
 
 def get_earnings_data(symbol: str) -> dict:
+    """Fetch latest earnings and price data for an NSE symbol."""
     ticker = yf.Ticker(symbol)
     info = ticker.info
     hist = ticker.history(period="5d")
@@ -86,6 +87,7 @@ def get_earnings_data(symbol: str) -> dict:
     }
 
 def analyze_earnings(data: dict) -> str:
+    """Generate a 3-4 sentence Claude analysis of earnings results."""
     prompt = f"""Analyze this NSE earnings result in 3-4 sentences for a retail investor.
     
 Company: {data['name']} ({data['symbol']})
@@ -105,7 +107,8 @@ Keep it under 120 words, plain text, no headers."""
     )
     return response.content[0].text
 
-def send_telegram(message: str):
+def send_telegram(message: str) -> None:
+    """Send a message via Telegram bot. Prints to console if not configured."""
     if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
         print(f"[Telegram disabled] {message[:100]}...")
         return
@@ -117,6 +120,7 @@ def send_telegram(message: str):
     })
 
 def format_alert(data: dict, analysis: str) -> str:
+    """Format earnings data and analysis as a Telegram-ready Markdown string."""
     surprise = data.get('surprise_pct')
     surprise_emoji = "🟢" if (surprise or 0) > 0 else "🔴" if (surprise or 0) < 0 else "⚪"
     price_emoji = "📈" if data['change_pct'] > 0 else "📉"

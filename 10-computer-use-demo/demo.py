@@ -1,7 +1,7 @@
 """
 Claude Computer Use Demo
 Shows how to use Claude's computer use capability with practical examples.
-Note: Requires claude-3-5-sonnet and beta header.
+Note: Uses claude-sonnet-4-5 with computer-use-2024-10-22 beta header.
 """
 import anthropic
 import base64

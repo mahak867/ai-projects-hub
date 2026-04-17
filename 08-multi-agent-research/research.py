@@ -21,6 +21,7 @@ if not ANTHROPIC_API_KEY:
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 def call_agent(role: str, system: str, prompt: str, context: str = "") -> str:
+    """Call a single Claude agent with optional prior-agent context."""
     print(f"\n🤖 {role} working...")
     start = time.time()
     
@@ -43,6 +44,7 @@ def call_agent(role: str, system: str, prompt: str, context: str = "") -> str:
     return response.content[0].text
 
 def research(topic: str, depth: str = "standard") -> dict:
+    """Run the full 3-agent research pipeline and return all outputs."""
     print(f"\n{'='*60}")
     print(f"🔬 Research Pipeline: {topic}")
     print(f"{'='*60}")

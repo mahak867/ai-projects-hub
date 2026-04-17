@@ -23,6 +23,7 @@ FEEDS = {
 }
 
 def fetch_articles(max_per_feed: int = 10) -> list[dict]:
+    """Fetch latest articles from all configured RSS feeds."""
     articles = []
     for source, url in FEEDS.items():
         try:
@@ -40,6 +41,7 @@ def fetch_articles(max_per_feed: int = 10) -> list[dict]:
     return articles
 
 def analyze_news(articles: list[dict], focus: str = "Indian markets") -> dict:
+    """Run Claude analysis on fetched articles and return structured sentiment JSON."""
     articles_text = "\n\n".join([
         f"SOURCE: {a['source']}\nTITLE: {a['title']}\nSUMMARY: {a['summary']}"
         for a in articles[:30]
@@ -84,6 +86,7 @@ Return ONLY valid JSON."""
         raise ValueError(f"Claude returned invalid JSON: {e}\nResponse: {raw}") from e
 
 def format_email(analysis: dict, articles: list[dict]) -> tuple[str, str]:
+    """Format analysis as an HTML email digest. Returns (subject, html_body)."""
     date = datetime.now().strftime("%B %d, %Y")
     sentiment = analysis.get("market_sentiment", "Neutral")
     emoji = {"Bullish": "🟢", "Bearish": "🔴", "Neutral": "🟡", "Mixed": "🟠"}.get(sentiment, "⚪")
@@ -110,7 +113,8 @@ def format_email(analysis: dict, articles: list[dict]) -> tuple[str, str]:
 </body></html>"""
     return subject, html
 
-def send_email(subject: str, html: str, to_email: str):
+def send_email(subject: str, html: str, to_email: str) -> None:
+    """Send the digest via Gmail SMTP. Prints to console if SMTP not configured."""
     smtp_user = os.environ.get("SMTP_USER", "")
     smtp_pass = os.environ.get("SMTP_PASS", "")
     if not smtp_user:

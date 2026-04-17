@@ -35,6 +35,7 @@ def init_db():
     return conn
 
 def compute_technicals(symbol: str, period: str = "6mo") -> dict:
+    """Compute RSI, MACD, Bollinger Bands, and moving averages for a symbol."""
     ticker = yf.Ticker(symbol)
     hist = ticker.history(period=period)
     if hist.empty:
@@ -95,6 +96,7 @@ def compute_technicals(symbol: str, period: str = "6mo") -> dict:
     }
 
 def generate_signal(technicals: dict) -> dict:
+    """Ask Claude to interpret technicals and return a BUY/SELL/HOLD signal."""
     prompt = f"""You are a technical analyst for Indian equities. Analyze these indicators and generate a trading signal.
 
 TECHNICAL DATA:
@@ -140,6 +142,7 @@ Return ONLY valid JSON."""
         raise ValueError(f"Claude returned invalid JSON for signal: {e}\nResponse: {raw}") from e
 
 def analyze(symbols: list[str], save: bool = True) -> list[dict]:
+    """Run technical analysis and signal generation for a list of symbols."""
     conn = init_db() if save else None
     results = []
 

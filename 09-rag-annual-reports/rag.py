@@ -24,6 +24,7 @@ client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 chroma = chromadb.PersistentClient(path="./chroma_db")
 
 def chunk_text(text: str, chunk_size: int = 800, overlap: int = 100) -> list[str]:
+    """Split text into overlapping word-count chunks for vector indexing."""
     words = text.split()
     chunks = []
     i = 0
@@ -45,6 +46,7 @@ def embed_text(texts: list[str]) -> list[list[float]]:
     import math
     
     def simple_embed(text: str, dims: int = 384) -> list[float]:
+        """Hash-based embedding for demo purposes. Replace with VoyageAI in production."""
         words = text.lower().split()
         vec = [0.0] * dims
         for word in words:
@@ -56,7 +58,8 @@ def embed_text(texts: list[str]) -> list[list[float]]:
     
     return [simple_embed(t) for t in texts]
 
-def ingest_pdf(pdf_path: str, company: str, year: str, collection_name: str = "annual_reports"):
+def ingest_pdf(pdf_path: str, company: str, year: str, collection_name: str = "annual_reports") -> None:
+    """Parse a PDF, chunk it, embed it, and store in ChromaDB."""
     print(f"Ingesting {company} {year} annual report...")
     
     collection = chroma.get_or_create_collection(collection_name)
@@ -91,7 +94,7 @@ def ingest_pdf(pdf_path: str, company: str, year: str, collection_name: str = "a
 
 def query(question: str, companies: list[str] = None, years: list[str] = None, 
           collection_name: str = "annual_reports", n_results: int = 8) -> str:
-    
+    """Search ChromaDB for relevant chunks and answer a question using Claude."""
     collection = chroma.get_or_create_collection(collection_name)
     
     where = {}

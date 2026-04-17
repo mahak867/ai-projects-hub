@@ -13,11 +13,13 @@ if not ANTHROPIC_API_KEY:
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 def extract_pdf(path: str) -> str:
+    """Extract all text from a PDF file using PyPDF2."""
     with open(path, 'rb') as f:
         reader = PyPDF2.PdfReader(f)
         return "\n".join(p.extract_text() for p in reader.pages if p.extract_text())
 
 def extract_structured(text: str, doc_type: str, schema: dict) -> dict:
+    """Extract structured data from document text using a provided JSON schema."""
     prompt = f"""Extract structured information from this {doc_type}.
 
 SCHEMA TO EXTRACT:
@@ -40,6 +42,7 @@ Return ONLY valid JSON matching the schema exactly. Use null for missing fields.
         raise ValueError(f"Claude returned invalid JSON: {e}\nResponse: {raw}") from e
 
 def compare_documents(docs: list[dict], comparison_focus: str = "all differences") -> str:
+    """Compare multiple extracted documents and return a markdown analysis report."""
     prompt = f"""Compare these documents and analyze {comparison_focus}.
 
 DOCUMENTS:
