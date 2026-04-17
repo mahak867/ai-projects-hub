@@ -1,4 +1,11 @@
-# Python
+# ── API Keys & Secrets ──────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.key
+secrets.json
+
+# ── Python ──────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
@@ -9,35 +16,74 @@ __pycache__/
 dist/
 build/
 .eggs/
-.venv/
+pip-wheel-metadata/
+*.whl
+.installed.cfg
+
+# ── Virtual Environments ─────────────────────────────────────
 venv/
+.venv/
+env/
 ENV/
+.env/
 
-# Environment & secrets
-.env
-.env.*
-!.env.example
-*.key
-secrets/
+# ── Testing & Coverage ──────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+coverage.xml
+*.cover
+.hypothesis/
 
-# Data files generated at runtime
-journal.json
-paper_trades.db
+# ── Type Checking ────────────────────────────────────────────
+.mypy_cache/
+.dmypy.json
+.pyright/
+
+# ── Jupyter ──────────────────────────────────────────────────
+.ipynb_checkpoints
+*.ipynb
+
+# ── Project-specific runtime data ───────────────────────────
 chroma_db/
+*.db
+*.sqlite
+*.sqlite3
+paper_trades.db
+journal.json
 
-# Media files (upload your own)
+# ── Audio/Video (whisper temp files) ─────────────────────────
 *.mp3
-*.mp4
 *.wav
 *.m4a
-*.pdf
+*.mp4
+*.vtt
+/tmp/yt_*
 
-# OS
+# ── OS ───────────────────────────────────────────────────────
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# IDE
+# ── IDE ──────────────────────────────────────────────────────
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.cursor/
+
+# ── Logs ─────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Uploads / outputs (streamlit & data analyst) ─────────────
+uploads/
+outputs/
+tmp/

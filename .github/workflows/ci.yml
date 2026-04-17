@@ -21,10 +21,11 @@ jobs:
       - name: Check all Python files compile
         run: |
           echo "Checking syntax for all .py files..."
-          find . -name "*.py" -not -path "./.git/*" | while read f; do
-            python3 -m py_compile "$f" && echo "✓ $f" || { echo "✗ FAIL: $f"; exit 1; }
-          done
-          echo "All files pass syntax check ✓"
+          FAILED=0
+          while IFS= read -r -d '' f; do
+            python3 -m py_compile "$f" && echo "✓ $f" || { echo "✗ FAIL: $f"; FAILED=1; }
+          done < <(find . -name "*.py" -not -path "./.git/*" -not -path "*/__pycache__/*" -print0)
+          [ $FAILED -eq 0 ] && echo "All files pass ✓" || exit 1
 
   structure-check:
     name: Project Structure Check
@@ -36,8 +37,44 @@ jobs:
         run: |
           FAILED=0
           for dir in [0-9][0-9]-*/; do
-            [ -f "$dir/README.md" ]       || { echo "Missing README.md in $dir"; FAILED=1; }
+            [ -f "$dir/README.md" ]        || { echo "Missing README.md in $dir"; FAILED=1; }
             [ -f "$dir/requirements.txt" ] || { echo "Missing requirements.txt in $dir"; FAILED=1; }
             [ -f "$dir/.env.example" ]     || { echo "Missing .env.example in $dir"; FAILED=1; }
           done
           [ $FAILED -eq 0 ] && echo "All projects have required files ✓" || exit 1
+
+      - name: Check no .env files are tracked
+        run: |
+          if git ls-files | grep -E '^.*\.env$' | grep -v '.env.example'; then
+            echo "ERROR: .env file is tracked by git — remove it immediately and revoke any exposed keys"
+            exit 1
+          fi
+          echo "No .env files tracked ✓"
+
+      - name: Check .gitignore exists and covers .env
+        run: |
+          [ -f ".gitignore" ] || { echo "Missing .gitignore"; exit 1; }
+          grep -q "\.env" .gitignore || { echo ".gitignore does not cover .env files"; exit 1; }
+          echo ".gitignore OK ✓"
+
+  security-check:
+    name: Security Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Scan for hardcoded secrets
+        run: |
+          echo "Scanning for hardcoded API keys..."
+          FAILED=0
+          # Look for real Anthropic key patterns (sk-ant-api03-...)
+          if grep -r "sk-ant-api" --include="*.py" --include="*.md" --include="*.yml" .; then
+            echo "ERROR: Possible hardcoded Anthropic API key found"
+            FAILED=1
+          fi
+          [ $FAILED -eq 0 ] && echo "No hardcoded secrets found ✓" || exit 1
