@@ -20,12 +20,16 @@ help:
 setup:
 	@bash setup.sh
 
-# Syntax check all Python files
+# Syntax check all Python files and run ruff for deeper analysis
 lint:
 	@echo "Checking Python syntax..."
 	@find . -name "*.py" -not -path "./.git/*" -not -path "*/__pycache__/*" | \
 		while read f; do python3 -m py_compile "$$f" && echo "  ✓ $$f" || exit 1; done
 	@echo "All files OK ✓"
+	@echo "Running ruff..."
+	@command -v ruff >/dev/null 2>&1 \
+		&& ruff check --select F821,F811,E9 . && echo "Ruff OK ✓" \
+		|| echo "  (ruff not installed; skipping — run: pip install ruff)"
 
 # Full structure + syntax check (mirrors CI)
 check: lint

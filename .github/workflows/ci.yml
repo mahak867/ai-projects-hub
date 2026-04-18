@@ -57,6 +57,62 @@ jobs:
           grep -q "\.env" .gitignore || { echo ".gitignore does not cover .env files"; exit 1; }
           echo ".gitignore OK ✓"
 
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install --quiet ruff
+
+      - name: Run ruff
+        run: ruff check --select F821,F811,E9 .
+
+  smoke-test:
+    name: Smoke Test — ${{ matrix.project.dir }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - { dir: "08-multi-agent-research",        entry: "research.py"    }
+          - { dir: "11-ai-code-reviewer",             entry: "review.py"      }
+          - { dir: "18-document-intelligence",        entry: "extractor.py"   }
+          - { dir: "20-context-engineering-cookbook", entry: "examples/pattern_1_structured_output.py" }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies for ${{ matrix.project.dir }}
+        run: pip install --quiet -r ${{ matrix.project.dir }}/requirements.txt
+
+      - name: Smoke-test imports for ${{ matrix.project.dir }}
+        env:
+          ANTHROPIC_API_KEY: smoke-test-dummy-key-ci
+        run: |
+          python - << 'PYEOF'
+          import importlib.util, sys
+          entry = "${{ matrix.project.dir }}/${{ matrix.project.entry }}"
+          spec = importlib.util.spec_from_file_location("_smoke", entry)
+          mod = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          print("✓", entry, "— imports OK")
+          PYEOF
+
   security-check:
     name: Security Check
     runs-on: ubuntu-latest

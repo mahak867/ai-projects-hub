@@ -42,7 +42,6 @@ def embed_text(texts: list[str]) -> list[list[float]]:
     # Use: pip install voyageai and voyage_client.embed(texts)
     
     # Simple TF-IDF style embedding for demo (replace with real embeddings)
-    import hashlib
     import math
     
     def simple_embed(text: str, dims: int = 384) -> list[float]:
