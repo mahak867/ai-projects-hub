@@ -43,3 +43,29 @@ python review.py
 
 ## Key concept: GitHub Actions + AI
 Combining GitHub's event system with Claude creates always-on AI assistance that runs exactly when needed — no babysitting required.
+
+## ⚠️ Known Limitations
+- **GitHub Actions only**: The automated review workflow requires GitHub Actions; GitLab CI or Bitbucket pipelines need adaptation
+- **Large PRs**: Diffs exceeding Claude's context window (~200K tokens) are truncated — very large refactors may get an incomplete review
+- **Language coverage**: Default configuration is optimized for Python; other languages work but may receive less precise feedback
+- **No architectural review**: Claude reviews code at the file/function level; it cannot evaluate system-wide architecture decisions across PRs
+
+## 🧪 Testing & Linting
+
+```bash
+# Install linter
+pip install ruff
+
+# Check for style and correctness issues
+ruff check .
+
+# Verify all dependencies install correctly
+pip install -r requirements.txt
+
+# Smoke test — confirm imports load without error
+python -c "import anthropic; print('All dependencies OK')"
+
+# Run a local review on this project's own source file
+export ANTHROPIC_API_KEY=sk-ant-...
+python review.py review.py
+```

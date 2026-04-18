@@ -28,3 +28,25 @@ Instead of a static vector database, this RAG system fetches fresh web results a
 - Cache results in Redis
 - Add image search
 - Deploy to Streamlit Cloud (free)
+
+## ⚠️ Known Limitations
+- **Brave Search quota**: The free tier allows 2,000 searches per month; heavy usage requires a paid plan
+- **Search freshness**: Results depend on Brave's web index; very recent events (last few hours) may not be indexed
+- **No session persistence**: Conversation history is stored in Streamlit session state and resets on page refresh
+- **Citation accuracy**: Claude cites the URLs returned by Brave Search but does not re-verify the content of each source
+
+## 🧪 Testing & Linting
+
+```bash
+# Install linter
+pip install ruff
+
+# Check for style and correctness issues
+ruff check .
+
+# Verify all dependencies install correctly
+pip install -r requirements.txt
+
+# Smoke test — confirm imports load without error
+python -c "import anthropic, streamlit, requests; print('All dependencies OK')"
+```

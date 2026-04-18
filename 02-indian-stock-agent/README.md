@@ -37,3 +37,25 @@ Uses Claude's **tool use** feature — Claude decides which data to fetch, calls
 
 ## Key concept: Tool Use (Function Calling)
 Claude doesn't just generate text — it decides what data it needs, fetches it via tools, then reasons over real numbers. This is the foundation of every production AI agent.
+
+## ⚠️ Known Limitations
+- **Data delay**: yfinance data may lag real-time prices by 15 minutes
+- **Coverage**: Only stocks available on Yahoo Finance are supported — some smaller NSE/BSE counters may be missing
+- **No intraday data**: Historical data is at daily (OHLCV) granularity; tick or intraday data is not supported
+- **Fundamentals accuracy**: Fundamental ratios (P/E, ROE) are sourced from Yahoo Finance and may differ from official filings
+
+## 🧪 Testing & Linting
+
+```bash
+# Install linter
+pip install ruff
+
+# Check for style and correctness issues
+ruff check .
+
+# Verify all dependencies install correctly
+pip install -r requirements.txt
+
+# Smoke test — confirm imports load without error
+python -c "import anthropic, yfinance; print('All dependencies OK')"
+```

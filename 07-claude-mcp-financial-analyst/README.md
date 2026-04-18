@@ -37,3 +37,25 @@ Restart Claude Desktop. You'll see a 🔧 icon in the chat input.
 
 ## Key concept: MCP
 Model Context Protocol lets Claude call external tools directly from the chat interface, without you writing any code each time. Build once, use forever.
+
+## ⚠️ Known Limitations
+- **Claude Desktop only**: Works exclusively with the Claude Desktop app; not compatible with Claude.ai (web) or the raw API
+- **No real-time tick data**: yfinance provides delayed quotes (15 min); not suitable for live trading decisions
+- **MCP is local-only**: The MCP server runs on your machine; multi-user or cloud deployment requires extra configuration
+- **Symbol format**: Stocks must use Yahoo Finance symbols (e.g., `TCS.NS`, `HDFCBANK.NS`); plain names like "TCS" will not resolve
+
+## 🧪 Testing & Linting
+
+```bash
+# Install linter
+pip install ruff
+
+# Check for style and correctness issues
+ruff check .
+
+# Verify all dependencies install correctly
+pip install -r requirements.txt
+
+# Smoke test — confirm the MCP server loads without error
+python -c "import mcp, yfinance, anthropic; print('All dependencies OK')"
+```

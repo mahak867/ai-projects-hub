@@ -32,3 +32,25 @@ streamlit run app.py
 - Add support for multiple PDFs
 - Export conversation to markdown
 - Add semantic search with embeddings for very large PDFs
+
+## ⚠️ Known Limitations
+- **Context window**: PDFs longer than ~150,000 words are truncated before being sent to Claude
+- **Text only**: Images, tables, and charts inside PDFs are not extracted — text layer only
+- **No persistence**: Conversation resets on page refresh; there is no session storage
+- **Scanned PDFs**: PyPDF2 cannot extract text from image-based (scanned) PDFs — use a PDF with a text layer
+
+## 🧪 Testing & Linting
+
+```bash
+# Install linter
+pip install ruff
+
+# Check for style and correctness issues
+ruff check .
+
+# Verify all dependencies install correctly
+pip install -r requirements.txt
+
+# Smoke test — confirm imports load without error
+python -c "import anthropic, streamlit, PyPDF2; print('All dependencies OK')"
+```

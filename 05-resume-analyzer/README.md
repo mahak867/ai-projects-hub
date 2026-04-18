@@ -24,3 +24,25 @@ Claude parses both documents and returns structured JSON with the full analysis.
 
 ## Key concept: Structured output
 By asking Claude to return JSON with a specific schema and parsing it in Python, you get reliable, machine-readable AI output — the foundation of production AI systems.
+
+## ⚠️ Known Limitations
+- **Language**: Works best with English-language resumes and job descriptions; other languages may produce lower-quality analysis
+- **Niche roles**: Very specialized technical roles (e.g., RF hardware engineer, semiconductor process) may yield less accurate skill gap assessments
+- **ATS scoring**: The match score reflects Claude's analysis, not any specific ATS algorithm; actual recruiter tools may score differently
+- **No file persistence**: Analysis results are not saved between sessions; export manually if needed
+
+## 🧪 Testing & Linting
+
+```bash
+# Install linter
+pip install ruff
+
+# Check for style and correctness issues
+ruff check .
+
+# Verify all dependencies install correctly
+pip install -r requirements.txt
+
+# Smoke test — confirm imports load without error
+python -c "import anthropic, streamlit, PyPDF2; print('All dependencies OK')"
+```
