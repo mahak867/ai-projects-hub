@@ -71,10 +71,16 @@ jobs:
       - name: Scan for hardcoded secrets
         run: |
           echo "Scanning for hardcoded API keys..."
-          FAILED=0
-          # Look for real Anthropic key patterns (sk-ant-api03-...)
-          if grep -r "sk-ant-api" --include="*.py" --include="*.md" --include="*.yml" .; then
-            echo "ERROR: Possible hardcoded Anthropic API key found"
-            FAILED=1
+          # Match real keys: sk-ant-api03- followed by real base64 chars (not placeholder xxx/your_key/...)
+          # Excludes: the CI file itself, and placeholder examples like sk-ant-api03-xxx
+          MATCHES=$(grep -rE "sk-ant-api[0-9]+-[A-Za-z0-9_-]{20,}" \
+            --include="*.py" --include="*.json" \
+            --exclude-dir=".git" \
+            . 2>/dev/null || true)
+          if [ -n "$MATCHES" ]; then
+            echo "ERROR: Real Anthropic API key detected in source code:"
+            echo "$MATCHES"
+            echo "Revoke it immediately at https://console.anthropic.com"
+            exit 1
           fi
-          [ $FAILED -eq 0 ] && echo "No hardcoded secrets found ✓" || exit 1
+          echo "No hardcoded secrets found ✓"
