@@ -7,6 +7,7 @@ Multi-Agent Research Pipeline
 """
 import anthropic
 import argparse
+import os
 import time
 from datetime import datetime
 
