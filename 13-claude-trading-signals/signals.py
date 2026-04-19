@@ -178,12 +178,45 @@ def analyze(symbols: list[str], save: bool = True) -> list[dict]:
 
 WATCHLIST = ["TCS.NS", "INFY.NS", "HDFCBANK.NS", "RELIANCE.NS", "ICICIBANK.NS"]
 
+
+def show_history(limit: int = 20) -> None:
+    """Print the last N signals saved to the SQLite database."""
+    conn = init_db()
+    rows = conn.execute(
+        "SELECT date, symbol, signal, confidence, price, analysis "
+        "FROM signals ORDER BY date DESC LIMIT ?",
+        (limit,),
+    ).fetchall()
+    conn.close()
+
+    if not rows:
+        print("No signal history found. Run the analyzer first.")
+        return
+
+    print(f"\n📜 Last {min(limit, len(rows))} signals from {DB_PATH}\n")
+    print(f"{'Date':<21} {'Symbol':<14} {'Signal':<6} {'Conf':>5} {'Price':>10}")
+    print("-" * 62)
+    for date, symbol, signal, confidence, price, analysis in rows:
+        emoji = {"BUY": "🟢", "SELL": "🔴", "HOLD": "🟡"}.get(signal, "⚪")
+        print(
+            f"{str(date)[:19]:<21} {symbol:<14} {emoji}{signal:<5} "
+            f"{confidence:>4}% {price:>10.2f}"
+        )
+        print(f"  └─ {analysis[:100]}{'…' if len(analysis or '') > 100 else ''}")
+
+
 if __name__ == "__main__":
     import sys
-    symbols = sys.argv[1:] if len(sys.argv) > 1 else WATCHLIST
-    print("=" * 60)
-    print("📊 NSE Trading Signals (Paper Trading Only)")
-    print("=" * 60)
-    print("⚠️  NOT financial advice. Educational use only.\n")
-    results = analyze(symbols)
-    print(f"\n✅ Analyzed {len(results)} stocks. Signals saved to {DB_PATH}")
+    if "--history" in sys.argv:
+        idx = sys.argv.index("--history")
+        limit = int(sys.argv[idx + 1]) if idx + 1 < len(sys.argv) and sys.argv[idx + 1].isdigit() else 20
+        show_history(limit)
+    else:
+        symbols = [a for a in sys.argv[1:] if not a.startswith("--")] or WATCHLIST
+        print("=" * 60)
+        print("📊 NSE Trading Signals (Paper Trading Only)")
+        print("=" * 60)
+        print("⚠️  NOT financial advice. Educational use only.\n")
+        results = analyze(symbols)
+        print(f"\n✅ Analyzed {len(results)} stocks. Signals saved to {DB_PATH}")
+        print(f"\nTip: view signal history with: python signals.py --history")

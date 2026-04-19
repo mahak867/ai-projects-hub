@@ -2,3 +2,5 @@ anthropic>=0.40.0
 chromadb>=0.5.0
 PyPDF2>=3.0.0
 requests>=2.31.0
+# Optional: install for production-quality semantic search (strongly recommended)
+# voyageai>=0.3.0

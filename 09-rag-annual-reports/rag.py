@@ -8,6 +8,7 @@ import requests
 import PyPDF2
 import io
 import hashlib
+import math
 import os
 import argparse
 from pathlib import Path
@@ -20,6 +21,17 @@ if not ANTHROPIC_API_KEY:
     print("   Fix: export ANTHROPIC_API_KEY='sk-ant-...'")
     print("   Get a key: https://console.anthropic.com")
     sys.exit(1)
+
+# Optional: set VOYAGE_API_KEY for real semantic embeddings (strongly recommended)
+# Get a free key at https://www.voyageai.com  (10M tokens/month free)
+VOYAGE_API_KEY = os.getenv("VOYAGE_API_KEY")
+if not VOYAGE_API_KEY:
+    print(
+        "⚠️  VOYAGE_API_KEY not set — falling back to hash-based embeddings (demo quality).\n"
+        "   Set VOYAGE_API_KEY for production-quality semantic search.\n"
+        "   Free key: https://www.voyageai.com (10M tokens/month free)\n"
+    )
+
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 chroma = chromadb.PersistentClient(path="./chroma_db")
 
@@ -35,27 +47,38 @@ def chunk_text(text: str, chunk_size: int = 800, overlap: int = 100) -> list[str
     return [c for c in chunks if len(c.strip()) > 50]
 
 def embed_text(texts: list[str]) -> list[list[float]]:
-    """Use Claude's embedding via a simple approach — hash-based for demo,
-    or use voyage-ai / openai embeddings in production"""
-    # For production: use voyage-ai embeddings (Anthropic recommends these)
-    # from anthropic import Anthropic
-    # Use: pip install voyageai and voyage_client.embed(texts)
-    
-    # Simple TF-IDF style embedding for demo (replace with real embeddings)
-    import math
-    
-    def simple_embed(text: str, dims: int = 384) -> list[float]:
-        """Hash-based embedding for demo purposes. Replace with VoyageAI in production."""
+    """Embed texts using VoyageAI (if VOYAGE_API_KEY set) or hash-based fallback.
+
+    VoyageAI provides real semantic embeddings, which dramatically improves
+    retrieval accuracy. Get a free key at https://www.voyageai.com.
+    The hash-based fallback is sufficient for demos but not for production.
+    """
+    if VOYAGE_API_KEY:
+        try:
+            import voyageai
+            vc = voyageai.Client(api_key=VOYAGE_API_KEY)
+            result = vc.embed(texts, model="voyage-2", input_type="document")
+            return result.embeddings
+        except ImportError:
+            print(
+                "⚠️ voyageai package not installed.\n"
+                "   Install it: pip install voyageai\n"
+                "   Falling back to hash-based embeddings."
+            )
+        except Exception as e:
+            print(f"⚠️ VoyageAI embedding failed ({e}). Falling back to hash-based embeddings.")
+
+    # Hash-based fallback (demo quality only — not suitable for production)
+    def _hash_embed(text: str, dims: int = 384) -> list[float]:
         words = text.lower().split()
         vec = [0.0] * dims
         for word in words:
             h = int(hashlib.md5(word.encode()).hexdigest(), 16)
-            idx = h % dims
-            vec[idx] += 1.0
-        norm = math.sqrt(sum(x*x for x in vec)) or 1
-        return [x/norm for x in vec]
-    
-    return [simple_embed(t) for t in texts]
+            vec[h % dims] += 1.0
+        norm = math.sqrt(sum(x * x for x in vec)) or 1
+        return [x / norm for x in vec]
+
+    return [_hash_embed(t) for t in texts]
 
 def ingest_pdf(pdf_path: str, company: str, year: str, collection_name: str = "annual_reports") -> None:
     """Parse a PDF, chunk it, embed it, and store in ChromaDB."""

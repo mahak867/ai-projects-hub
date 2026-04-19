@@ -15,8 +15,11 @@ Quick start:
 """
 from __future__ import annotations
 
+import json
 import os
+import sqlite3
 import sys
+from datetime import datetime
 from typing import Dict, List
 
 import anthropic
@@ -48,14 +51,65 @@ if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
     sys.exit(1)
 
 # ---------------------------------------------------------------------------
+# SQLite persistence — conversations survive restarts
+# ---------------------------------------------------------------------------
+DB_FILE = os.environ.get("CONVERSATIONS_DB", "conversations.db")
+
+
+def _get_db() -> sqlite3.Connection:
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def _init_db() -> None:
+    with _get_db() as conn:
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS conversations (
+                phone_number TEXT PRIMARY KEY,
+                messages     TEXT NOT NULL,
+                updated_at   TEXT NOT NULL
+            )"""
+        )
+
+
+def _load_history(phone_number: str) -> List[Dict[str, str]]:
+    with _get_db() as conn:
+        row = conn.execute(
+            "SELECT messages FROM conversations WHERE phone_number = ?",
+            (phone_number,),
+        ).fetchone()
+    return json.loads(row["messages"]) if row else []
+
+
+def _save_history(phone_number: str, messages: List[Dict[str, str]]) -> None:
+    with _get_db() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO conversations (phone_number, messages, updated_at) VALUES (?, ?, ?)",
+            (phone_number, json.dumps(messages), datetime.utcnow().isoformat()),
+        )
+
+
+def _clear_history(phone_number: str) -> bool:
+    with _get_db() as conn:
+        affected = conn.execute(
+            "DELETE FROM conversations WHERE phone_number = ?", (phone_number,)
+        ).rowcount
+    return affected > 0
+
+
+def _count_conversations() -> int:
+    with _get_db() as conn:
+        return conn.execute("SELECT COUNT(*) FROM conversations").fetchone()[0]
+
+
+# ---------------------------------------------------------------------------
 # App setup
 # ---------------------------------------------------------------------------
+_init_db()
+
 app = Flask(__name__)
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-
-# In-memory store keyed by phone number.
-# Replace with Redis for production multi-process deployments.
-conversations: Dict[str, List[Dict[str, str]]] = {}
 
 SYSTEM = (
     "You are a helpful AI assistant on WhatsApp. "
@@ -91,21 +145,21 @@ def webhook() -> str:
         twiml.message("Please send a text message.")
         return str(twiml)
 
-    # Build / extend conversation history
-    if from_number not in conversations:
-        conversations[from_number] = []
-    conversations[from_number].append({"role": "user", "content": body})
-    history = conversations[from_number][-MAX_HISTORY:]
+    # Build / extend conversation history (persisted in SQLite)
+    history = _load_history(from_number)
+    history.append({"role": "user", "content": body})
+    trimmed = history[-MAX_HISTORY:]
 
     # Call Claude
     response = client.messages.create(
         model="claude-sonnet-4-20250514",
         max_tokens=512,
         system=SYSTEM,
-        messages=history,
+        messages=trimmed,
     )
     reply: str = response.content[0].text
-    conversations[from_number].append({"role": "assistant", "content": reply})
+    trimmed.append({"role": "assistant", "content": reply})
+    _save_history(from_number, trimmed)
 
     twiml.message(reply)
     return str(twiml)
@@ -121,8 +175,7 @@ def clear() -> Dict[str, str]:
         {"status": "cleared"} or {"status": "not_found"}
     """
     number: str = (request.json or {}).get("number", "")
-    if number in conversations:
-        del conversations[number]
+    if _clear_history(number):
         return {"status": "cleared"}
     return {"status": "not_found"}
 
@@ -130,7 +183,7 @@ def clear() -> Dict[str, str]:
 @app.route("/health", methods=["GET"])
 def health() -> Dict[str, str]:
     """Health check endpoint used by uptime monitors."""
-    return {"status": "ok", "conversations_active": len(conversations)}
+    return {"status": "ok", "conversations_active": _count_conversations()}
 
 
 # ---------------------------------------------------------------------------
