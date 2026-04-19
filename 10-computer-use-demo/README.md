@@ -43,3 +43,25 @@ The computer use API runs a tool loop:
 
 ## Key concept: Tool loops
 Computer use is just an extended tool-use loop where Claude has perception (screenshot) and action (keyboard/mouse/bash) tools. The same pattern applies to any agent that needs to take actions in the world.
+
+## ⚠️ Known Limitations
+- **Beta API**: Computer use is in public beta and the API interface may change without notice
+- **Display required**: Screenshot capture requires a running graphical display; headless Linux servers need a virtual display (e.g., Xvfb)
+- **Bash whitelist**: Only whitelisted commands are allowed by default; unwhitelisted commands will be rejected even if Claude requests them
+- **No undo**: Claude's actions (file edits, command execution) are irreversible — always run in a sandbox or Docker container for untrusted tasks
+
+## 🧪 Testing & Linting
+
+```bash
+# Install linter
+pip install ruff
+
+# Check for style and correctness issues
+ruff check .
+
+# Verify all dependencies install correctly
+pip install -r requirements.txt
+
+# Smoke test — confirm imports load without error
+python -c "import anthropic; print('All dependencies OK')"
+```

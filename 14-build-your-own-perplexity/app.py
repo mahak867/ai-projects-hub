@@ -20,36 +20,65 @@ with st.sidebar:
         value=os.getenv("ANTHROPIC_API_KEY", ""),
     )
     brave_key = st.text_input(
-        "Brave Search API Key (free at brave.com/search/api)",
+        "Brave Search API Key (optional — leave blank to use free DuckDuckGo)",
         type="password",
         value=os.getenv("BRAVE_API_KEY", ""),
     )
     st.markdown("""
-**Free API keys needed:**
-- [Anthropic](https://console.anthropic.com) — Claude
-- [Brave Search](https://brave.com/search/api/) — Web results (2000 free/month)
+**Keys needed:**
+- [Anthropic](https://console.anthropic.com) — Claude (required)
+- [Brave Search](https://brave.com/search/api/) — faster / 2,000 free searches/month (optional)
+- No Brave key? DuckDuckGo is used automatically at no cost.
 """)
 
 
-def brave_search(query: str, brave_api_key: str, count: int = 5) -> List[Dict[str, str]]:
-    """Search the web using the Brave Search API.
+def _duckduckgo_search(query: str, count: int = 5) -> List[Dict[str, str]]:
+    """Free web search via DuckDuckGo — no API key required.
 
     Args:
         query: Search query string
-        brave_api_key: Brave Search API key
+        count: Number of results to return
+
+    Returns:
+        List of result dicts with 'title', 'url', and 'snippet' keys
+    """
+    try:
+        from duckduckgo_search import DDGS
+        with DDGS() as ddgs:
+            raw = list(ddgs.text(query, max_results=count))
+        return [
+            {
+                "title": r.get("title", ""),
+                "url": r.get("href", ""),
+                "snippet": r.get("body", ""),
+            }
+            for r in raw
+        ]
+    except ImportError:
+        return [
+            {
+                "title": "duckduckgo-search not installed",
+                "url": "",
+                "snippet": "Run: pip install duckduckgo-search",
+            }
+        ]
+    except Exception as e:
+        return [{"title": "DuckDuckGo search error", "url": "", "snippet": str(e)}]
+
+
+def brave_search(query: str, brave_api_key: str, count: int = 5) -> List[Dict[str, str]]:
+    """Search the web using Brave Search API, or DuckDuckGo when no key is provided.
+
+    Args:
+        query: Search query string
+        brave_api_key: Brave Search API key (leave empty to use free DuckDuckGo)
         count: Number of results to return
 
     Returns:
         List of result dicts with 'title', 'url', and 'snippet' keys
     """
     if not brave_api_key:
-        return [
-            {
-                "title": "Demo result",
-                "url": "https://example.com",
-                "snippet": f"Demo snippet for: {query}. Add a Brave API key for real web results.",
-            }
-        ]
+        return _duckduckgo_search(query, count)
     try:
         r = requests.get(
             "https://api.search.brave.com/res/v1/web/search",

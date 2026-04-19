@@ -78,3 +78,29 @@ ngrok http 5000
 - **Hosting:** Deploy to [Railway](https://railway.app) or [Fly.io](https://fly.io) for 24/7 uptime (no ngrok needed)
 - **Rate limiting:** Add per-number limits to prevent abuse
 - **Production Twilio:** Apply for a real WhatsApp Business number through Twilio to remove sandbox restrictions
+
+## ⚠️ Known Limitations
+- **In-memory storage**: Conversation history resets when the server restarts — use Redis for persistence in production
+- **Twilio sandbox**: The free WhatsApp Sandbox requires recipients to opt in with a join code and has a 24-hour session window
+- **No media support**: Images, audio, and document messages sent on WhatsApp are not processed — text only
+- **Rate limits**: Twilio free tier has message caps; heavy usage requires a paid plan
+
+## 🧪 Testing & Linting
+
+```bash
+# Install linter
+pip install ruff
+
+# Check for style and correctness issues
+ruff check .
+
+# Verify all dependencies install correctly
+pip install -r requirements.txt
+
+# Smoke test — confirm imports load without error
+python -c "import anthropic, flask, twilio; print('All dependencies OK')"
+
+# Test the health endpoint locally (start the server first)
+# python bot.py &
+# curl http://localhost:5000/health
+```

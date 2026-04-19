@@ -40,3 +40,25 @@ import voyageai
 vo = voyageai.Client(api_key="...")
 embeddings = vo.embed(texts, model="voyage-finance-2").embeddings
 ```
+
+## ⚠️ Known Limitations
+- **Manual ingestion required**: PDFs must be downloaded from NSE/BSE websites and ingested manually — there is no automatic filing fetcher
+- **No persistence by default**: ChromaDB uses an in-memory store; ingested documents are lost on restart unless you configure a persistent directory
+- **Hindi/regional language PDFs**: Text extraction and embeddings are optimized for English; filings with mixed Hindi content may have lower retrieval accuracy
+- **Scanned PDFs**: Text extraction fails on image-based (scanned) annual reports — only digital-text PDFs are supported
+
+## 🧪 Testing & Linting
+
+```bash
+# Install linter
+pip install ruff
+
+# Check for style and correctness issues
+ruff check .
+
+# Verify all dependencies install correctly
+pip install -r requirements.txt
+
+# Smoke test — confirm imports load without error
+python -c "import anthropic, chromadb, PyPDF2; print('All dependencies OK')"
+```

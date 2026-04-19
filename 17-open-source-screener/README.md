@@ -121,3 +121,28 @@ python screener.py --output results.json
 ---
 
 **Built with Claude by Anthropic** | [More AI Projects](https://github.com/mahak867/ai-projects-hub)
+
+## ⚠️ Known Limitations
+- **Data delay**: Yahoo Finance prices are delayed by up to 15–30 minutes; not suitable for intraday decisions
+- **Fundamental data accuracy**: Ratios (ROE, P/E, D/E) are sourced from Yahoo Finance and may differ slightly from official BSE/NSE filings
+- **BSE coverage**: BSE symbols (`.BO` suffix) have lower data coverage than NSE (`.NS`) on Yahoo Finance — some BSE stocks may show incomplete metrics
+- **No real-time order book**: This is a screener, not a trading terminal; it does not connect to any brokerage API
+
+## 🧪 Testing & Linting
+
+```bash
+# Install linter
+pip install ruff
+
+# Check for style and correctness issues
+ruff check .
+
+# Verify all dependencies install correctly
+pip install -r requirements.txt
+
+# Smoke test — confirm imports load without error
+python -c "import anthropic, yfinance; print('All dependencies OK')"
+
+# Run screener without AI analysis (no API key needed for this step)
+python screener.py --no-ai
+```

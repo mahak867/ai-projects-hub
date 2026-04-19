@@ -124,7 +124,7 @@ Return ONLY valid JSON."""
 
 
 def save_entry(entry: Dict[str, object]) -> None:
-    """Save a journal entry to the JSON file.
+    """Save a journal entry to the JSON file and optionally sync to S3.
 
     Args:
         entry: Dictionary containing date, transcript, and insights
@@ -139,6 +139,29 @@ def save_entry(entry: Dict[str, object]) -> None:
 
     with open(JOURNAL_FILE, "w") as f:
         json.dump(entries, f, indent=2)
+
+    _sync_to_s3(JOURNAL_FILE)
+
+
+def _sync_to_s3(local_file: Path) -> None:
+    """Optionally upload the journal JSON to S3 for cross-device access.
+
+    Reads JOURNAL_S3_BUCKET (and optionally JOURNAL_S3_KEY) from env.
+    Does nothing if JOURNAL_S3_BUCKET is not set.
+    """
+    bucket = os.getenv("JOURNAL_S3_BUCKET")
+    if not bucket:
+        return
+
+    s3_key = os.getenv("JOURNAL_S3_KEY", local_file.name)
+    try:
+        import boto3  # type: ignore[import]
+        boto3.client("s3").upload_file(str(local_file), bucket, s3_key)
+        print(f"☁️  Synced to s3://{bucket}/{s3_key}")
+    except ImportError:
+        print("⚠️  S3 sync skipped — install boto3: pip install boto3")
+    except Exception as e:
+        print(f"⚠️  S3 sync failed: {e}")
 
 
 def show_trends() -> None:

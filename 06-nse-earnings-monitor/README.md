@@ -47,3 +47,28 @@ Infosys beat estimates by 7.5%...
 - Store history in SQLite
 - Add sector-level summaries
 - Web dashboard with Streamlit
+
+## ⚠️ Known Limitations
+- **Data source reliability**: NSE earnings data is scraped from public sources; website structure changes may break ingestion without warning
+- **Alert latency**: The monitor runs on a polling schedule (default 30 min); near-real-time alerts require a paid data feed
+- **No historical storage**: Alerts are sent via Telegram but not persisted locally by default
+- **Telegram only**: No built-in email or Slack alerting — requires extension
+
+## 🧪 Testing & Linting
+
+```bash
+# Install linter
+pip install ruff
+
+# Check for style and correctness issues
+ruff check .
+
+# Verify all dependencies install correctly
+pip install -r requirements.txt
+
+# Smoke test — confirm imports load without error
+python -c "import anthropic, requests, schedule; print('All dependencies OK')"
+
+# Dry run (prints results, does not send Telegram alerts)
+python monitor.py --once
+```

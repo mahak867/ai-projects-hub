@@ -35,3 +35,28 @@ python journal.py trends
 
 ## Key concept: Structured extraction
 By defining a strict JSON schema in the prompt, Claude reliably extracts structured data from unstructured voice/text. This pattern works for any extraction task.
+
+## ⚠️ Known Limitations
+- **Voice transcription**: Audio input requires OpenAI Whisper (separate API key); without it only text entry is supported
+- **English only**: Voice transcription and mood analysis are optimized for English; other languages will produce lower quality results
+- **Local storage only**: Journal entries are saved as JSON on disk with no encryption — do not store sensitive personal data without adding encryption
+- **No cross-device sync**: Journal data lives on your local machine; cloud sync requires additional setup
+
+## 🧪 Testing & Linting
+
+```bash
+# Install linter
+pip install ruff
+
+# Check for style and correctness issues
+ruff check .
+
+# Verify all dependencies install correctly
+pip install -r requirements.txt
+
+# Smoke test — confirm imports load without error
+python -c "import anthropic; print('All dependencies OK')"
+
+# Run the built-in demo (no API key needed for import check)
+python journal.py demo
+```

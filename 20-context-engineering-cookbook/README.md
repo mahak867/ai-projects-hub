@@ -289,3 +289,29 @@ See the `examples/` folder for runnable code for each pattern.
 ---
 
 *Built by [mahak867](https://github.com/mahak867) · MIT License*
+
+## ⚠️ Known Limitations
+- **Model sensitivity**: All patterns are tuned for Claude 3.5 Sonnet; results on other models (GPT-4, Gemini) may differ and may need prompt adjustments
+- **Cost of Pattern 7**: The self-critique loop (Pattern 7) makes three sequential API calls — roughly 3× the cost of a single call
+- **Prompt fragility**: Small wording changes can shift output quality significantly; treat the examples as starting points, not production-ready copy-paste
+- **No evaluation harness**: The cookbook demonstrates patterns but does not include automated tests or quality benchmarks to validate improvements
+
+## 🧪 Testing & Linting
+
+```bash
+# Install linter
+pip install ruff
+
+# Check for style and correctness issues
+ruff check .
+
+# Verify all dependencies install correctly
+pip install -r requirements.txt
+
+# Smoke test — confirm imports load without error
+python -c "import anthropic; print('All dependencies OK')"
+
+# Run all pattern examples
+python examples/pattern_1_structured_output.py
+python examples/pattern_7_self_critique.py
+```

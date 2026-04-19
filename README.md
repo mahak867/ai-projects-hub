@@ -33,6 +33,106 @@ You need Python 3.10+ and a **free Claude API key** → [console.anthropic.com](
 
 ---
 
+## ⭐ Featured Projects
+
+Three projects that show the full range — from a tool anyone can use in 5 minutes to India-first financial infrastructure an investor can evaluate immediately.
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+### 🏆 05 · Resume Analyzer
+
+Upload resume + job description → match score, gap analysis, cover letter points, interview prep — in one click.
+
+**Success metrics**
+- Match score 0–100 with letter grade
+- Skills gap list with actionable recommendations
+- Section-by-section rewrite suggestions
+- Average runtime: ~4 seconds per analysis
+
+**Demo output**
+```
+Match Score: 74 / 100  (Good)
+Missing skills: Kubernetes, dbt, Spark
+Strengths: Python, SQL, ML pipeline design
+Interview topics: System design, MLOps
+```
+
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=streamlit&logoColor=white)
+![Structured Output](https://img.shields.io/badge/Structured_Output-D97706?style=flat)
+
+**[→ Try it now](./05-resume-analyzer/)**
+
+</td>
+<td width="33%" valign="top">
+
+### 🏆 14 · Build Your Own Perplexity
+
+Live web search + Claude streaming = cited AI answers that update in real time. Two free API keys, no infrastructure.
+
+**Success metrics**
+- First token in < 1.5 seconds
+- Inline citations [1] [2] [3] from real URLs
+- Full conversation history
+- 2,000 free searches/month (Brave free tier)
+
+**Demo output**
+```
+Q: What is India's current repo rate?
+
+RBI held repo rate at 6.5% in its April 2025
+policy review [1], citing sticky core inflation.
+Analysts expect a cut in Q3 FY26 [2][3].
+
+Sources: [1] rbi.org.in  [2] economictimes.com
+         [3] moneycontrol.com
+```
+
+![Brave Search](https://img.shields.io/badge/Brave_Search-FB542B?style=flat)
+![Streaming](https://img.shields.io/badge/Streaming-D97706?style=flat)
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat&logo=streamlit)
+
+**[→ Try it now](./14-build-your-own-perplexity/)**
+
+</td>
+<td width="33%" valign="top">
+
+### 🏆 17 · Open Source Screener
+
+Self-hosted Screener.in for NSE/BSE. Filter by ROE, P/E, market cap, debt → Claude ranks picks and flags risks.
+
+**Success metrics**
+- Screens 50 stocks in < 10 seconds
+- Filters: ROE, P/E, market cap, D/E ratio
+- Claude AI analysis: top picks + red flags
+- India-first: native ₹ and NSE/BSE symbols
+
+**Demo output**
+```
+$ python screener.py --min-roe 20 --max-pe 25
+
+✓ 6 stocks passed filters
+TCS.NS    ROE 45%  PE 24  ↑12% 1Y
+INFY.NS   ROE 31%  PE 23  ↑ 8% 1Y
+
+Claude: "TCS leads on capital efficiency;
+INFY trades at a discount — watch for
+margin recovery in H2 FY26."
+```
+
+![NSE/BSE](https://img.shields.io/badge/NSE%2FBSE-FF9933?style=flat)
+![yfinance](https://img.shields.io/badge/yfinance-green?style=flat)
+![Claude AI](https://img.shields.io/badge/Claude_AI-D97706?style=flat)
+
+**[→ Try it now](./17-open-source-screener/)**
+
+</td>
+</tr>
+</table>
+
+---
+
 ## 📦 Projects
 
 ### 🟢 Beginner — start here

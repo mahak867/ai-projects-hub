@@ -38,6 +38,22 @@ python summarize.py "https://youtube.com/watch?v=..." --output summary.json
 - Very long videos (3hr+) are truncated to ~60k chars
 - Private/age-restricted videos won't work
 
+## 🧪 Testing & Linting
+
+```bash
+# Install linter
+pip install ruff
+
+# Check for style and correctness issues
+ruff check .
+
+# Verify all dependencies install correctly
+pip install -r requirements.txt
+
+# Smoke test — confirm imports load without error
+python -c "import anthropic, yt_dlp; print('All dependencies OK')"
+```
+
 ## Extend it
 - Add a Streamlit UI
 - Batch summarize a playlist
